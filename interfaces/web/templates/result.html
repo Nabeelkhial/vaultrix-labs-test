@@ -1,14 +1,19 @@
 {% extends "base.html" %}
-{% import "_findings.html" as fx %}
+{% import "_findings.html" as fx with context %}
+{% from "_icons.html" import icon with context %}
 {% block body %}
-<p><a href="/dashboard">← back</a></p>
-{% if error %}<div class="panel"><h3 class="crit">Scan failed</h3><pre>{{ error }}</pre></div>
+<p><a href="/dashboard">{{ icon('arrow-left','') }} Dashboard</a></p>
+{% if error %}
+<div class="panel reveal"><div class="datalabel c-critical" style="margin-bottom:10px">{{ icon('octagon') }} Scan failed</div>
+  <pre>{{ error }}</pre></div>
 {% else %}
-<div class="panel">
-  <h2 style="margin-top:0">{{ result.target }}</h2>
-  {{ fx.grade_block(result) }}
+<div class="panel panel-pad-lg reveal">
+  <div class="datalabel" style="margin-bottom:14px">{{ icon('globe') }} Passive assessment · {{ result.target }}</div>
+  {{ fx.verdict(result) }}
 </div>
-<div class="panel">{{ fx.findings_list(result) }}</div>
-<p class="tag">Passive, read-only scan. Connect a repo for code, dependencies and a sandbox attack.</p>
+{{ fx.priority(result) }}
+{% if result.findings %}{{ fx.findings(result) }}
+{% else %}<div class="panel reveal"><p class="muted">No issues surfaced by the passive checks.</p></div>{% endif %}
+<p class="refs" style="margin-top:22px">Passive, read-only scan. Connect a repository for code, dependencies and a sandbox attack.</p>
 {% endif %}
 {% endblock %}

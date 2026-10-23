@@ -1,19 +1,26 @@
 {% extends "base.html" %}
-{% import "_findings.html" as fx %}
-{% block title %}Scan {{ job.target }}{% endblock %}
+{% import "_findings.html" as fx with context %}
+{% from "_icons.html" import icon with context %}
+{% block title %}{{ job.target }} · assessment{% endblock %}
 {% block body %}
 {% if job.status in ['queued','running'] %}<meta http-equiv="refresh" content="3">{% endif %}
-<p><a href="/dashboard">← back</a></p>
-<div class="panel">
-  <h2 style="margin-top:0">{{ job.target }} <span class="tag">{{ job.kind }}</span></h2>
-  <p>Status: <span class="pill b-{{ 'crit' if job.status=='error' else ('ok' if job.status=='done' else 'low') }}">{{ job.status }}</span>
-    {% if job.status in ['queued','running'] %}<span class="muted">· this page refreshes automatically</span>{% endif %}</p>
-  {% if job.log %}<pre>{{ job.log }}</pre>{% endif %}
+<p><a href="/dashboard">{{ icon('arrow-left','') }} Dashboard</a></p>
+<div class="panel reveal">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div class="datalabel" style="margin-bottom:6px">{{ icon(job.kind=='attack' and 'target' or 'file') }} {{ job.kind }} assessment</div>
+      <h2 style="font-family:var(--font-mono);font-weight:500">{{ job.target }}</h2>
+    </div>
+    <span class="status {{ job.status }}"><span class="led"></span>{{ job.status }}</span>
+  </div>
+  {% if job.status in ['queued','running'] %}<div class="scanbar"></div>{% endif %}
+  {% if job.log %}<div class="console" style="margin-top:16px">{% for ln in job.log.split('\n') %}<span class="ln">{{ ln }}</span>{% endfor %}</div>{% endif %}
 </div>
 {% if job.status == 'done' and job.result %}
-<div class="panel">{{ fx.grade_block(job.result) }}</div>
-<div class="panel">{{ fx.findings_list(job.result) }}</div>
+<div class="panel panel-pad-lg reveal">{{ fx.verdict(job.result) }}</div>
+{{ fx.priority(job.result) }}
+{% if job.result.findings %}{{ fx.findings(job.result) }}{% endif %}
 {% elif job.status == 'error' %}
-<div class="panel"><h3 class="crit">Scan failed</h3><p class="muted">See the log above.</p></div>
+<div class="panel reveal"><div class="datalabel c-critical">{{ icon('octagon') }} Assessment failed — see log</div></div>
 {% endif %}
 {% endblock %}

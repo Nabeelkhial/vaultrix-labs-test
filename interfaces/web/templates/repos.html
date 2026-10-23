@@ -1,29 +1,33 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon with context %}
 {% block body %}
-<p><a href="/dashboard">← back</a></p>
-<div class="panel">
-  <h2 style="margin-top:0">Your repositories</h2>
-  <p class="muted">We verify write access as proof of ownership, then scan code + dependencies.</p>
-  <table>
+<p><a href="/dashboard">{{ icon('arrow-left','') }} Dashboard</a></p>
+<div class="panel reveal">
+  <div class="datalabel" style="margin-bottom:6px">{{ icon('github') }} {{ repos|length }} repositories · write access = ownership</div>
+  <h2>Select a target</h2>
+  <div style="margin-top:18px">
     {% for r in repos %}
-    <tr>
-      <td><strong>{{ r.full_name }}</strong>
-          {% if r.private %}<span class="pill b-low">private</span>{% endif %}
-          <div class="tag">{{ r.language or '' }} · updated {{ r.pushed_at }}</div></td>
-      <td style="text-align:right">
-        <form method="post" action="/scan-repo" style="display:inline;margin:0">
-          <input type="hidden" name="repo" value="{{ r.full_name }}"><button>Scan code</button></form>
+    <div class="repo-row reveal" data-i="{{ loop.index0 }}">
+      <div>
+        <div class="r-name">{{ icon('file','') }}{{ r.full_name }}
+          {% if r.private %}<span class="badge">private</span>{% endif %}</div>
+        <div class="r-sub">{{ r.language or 'unknown' }} · updated {{ r.pushed_at }}</div>
+      </div>
+      <div class="field" style="gap:8px">
+        <form method="post" action="/scan-repo" style="margin:0">
+          <input type="hidden" name="repo" value="{{ r.full_name }}">
+          <button class="btn sm">{{ icon('scan') }} Scan code</button></form>
         {% if docker_ready %}
-        <form method="post" action="/attack" style="display:inline;margin:0">
+        <form method="post" action="/attack" style="margin:0">
           <input type="hidden" name="repo" value="{{ r.full_name }}">
           <input type="hidden" name="stack" value="supabase-next">
-          <button class="ghost">Attack sandbox</button></form>
+          <button class="btn ghost sm">{{ icon('target') }} Attack</button></form>
         {% endif %}
-      </td>
-    </tr>
+      </div>
+    </div>
     {% else %}
-    <tr><td class="muted">No repositories found for this account.</td></tr>
+    <p class="muted">No repositories found for this account.</p>
     {% endfor %}
-  </table>
+  </div>
 </div>
 {% endblock %}

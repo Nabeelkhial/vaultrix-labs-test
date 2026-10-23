@@ -1,0 +1,38 @@
+{#- Drawn icon set: one consistent 1.5 stroke, currentColor. No emoji/unicode. -#}
+{% macro icon(name, cls="") -%}
+{%- set p = {
+  'shield':        '<path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>',
+  'shield-alert':  '<path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M12 8v4"/><path d="M12 15.5h.01"/>',
+  'shield-check':  '<path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 11.5l2 2 4-4"/>',
+  'triangle':      '<path d="M10.3 4.3L2.5 18a2 2 0 001.7 3h15.6a2 2 0 001.7-3L13.7 4.3a2 2 0 00-3.4 0z"/><path d="M12 9v4"/><path d="M12 16.5h.01"/>',
+  'octagon':       '<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8l5-5z"/><path d="M12 8v4"/><path d="M12 15.5h.01"/>',
+  'bug':           '<rect x="8" y="7" width="8" height="12" rx="4"/><path d="M8 11H4M8 15H4M16 11h4M16 15h4M12 3v4M9.5 5.5L8 7M14.5 5.5L16 7"/>',
+  'key':           '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l2 2M14 9l2 2"/>',
+  'lock':          '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+  'package':       '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+  'server':        '<rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/><path d="M8 7.5h.01M8 16.5h.01"/>',
+  'globe':         '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  'radar':         '<path d="M12 3a9 9 0 109 9"/><path d="M12 12l5-3"/><circle cx="12" cy="12" r="1.5"/><path d="M12 12l0-6"/>',
+  'check':         '<path d="M4 12.5l5 5 11-11"/>',
+  'x':             '<path d="M6 6l12 12M18 6L6 18"/>',
+  'arrow-right':   '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  'arrow-left':    '<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  'github':        '<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 00-1.3-3.2 4.3 4.3 0 00-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 00-6.3 0C6.5 2.8 5.4 3.1 5.4 3.1a4.3 4.3 0 00-.1 3.2A4.6 4.6 0 004 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/>',
+  'search':        '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  'scan':          '<path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2"/><path d="M4 12h16"/>',
+  'file':          '<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z"/><path d="M14 3v5h5"/>',
+  'clock':         '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  'zap':           '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>',
+  'target':        '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/>'
+} -%}
+<svg class="{{ cls }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ p.get(name, p['shield'])|safe }}</svg>
+{%- endmacro %}
+
+{%- set LAYER_ICON = {
+  'secrets':'key','authz':'lock','dependencies':'package','injection':'bug',
+  'exposure':'globe','transport':'shield','hardening':'shield-check',
+  'runtime':'server','dynamic':'radar'} -%}
+{%- set SEV_ICON = {
+  'critical':'octagon','high':'triangle','medium':'triangle',
+  'low':'shield-alert','info':'shield-check','proven':'target'} -%}

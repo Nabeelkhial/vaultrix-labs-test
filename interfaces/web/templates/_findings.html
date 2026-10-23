@@ -1,29 +1,69 @@
-{% macro grade_block(r) %}
-{% set g = r.grade %}
-{% set cls = 'ok' if g in ['A','B'] else ('med' if g=='C' else 'crit') %}
-<div class="row" style="gap:20px;align-items:flex-end">
-  <div class="grade {{ cls }}">{{ g }}</div>
-  <div><div style="font-size:20px;font-weight:700">{{ r.score }}/100</div>
-  <div class="muted">{{ r.headline }}</div></div>
+{% from "_icons.html" import icon, SEV_ICON, LAYER_ICON with context %}
+
+{% macro verdict(r) %}
+<div class="verdict">
+  <div class="grade tnum" data-band="{{ r.grade }}">{{ r.grade }}</div>
+  <div>
+    <div class="datalabel">Security posture</div>
+    <div class="score tnum"><span data-count="{{ r.score }}">0</span><small> / 100</small></div>
+    <div class="headline">{{ r.headline }}</div>
+  </div>
 </div>
-<p style="margin-top:14px">
-  <span class="pill b-crit">{{ r.counts.critical }} critical</span>
-  <span class="pill b-high">{{ r.counts.high }} high</span>
-  <span class="pill b-med">{{ r.counts.medium }} medium</span>
-  <span class="pill b-low">{{ r.counts.low }} low</span>
-</p>
+{% set total = r.counts.critical + r.counts.high + r.counts.medium + r.counts.low %}
+{% if total %}
+<div class="meter" role="img" aria-label="severity distribution">
+  {% for s in ['critical','high','medium','low'] %}{% if r.counts[s] %}
+  <span class="m-{{ s }}" style="flex:{{ r.counts[s] }}"></span>{% endif %}{% endfor %}
+</div>
+{% endif %}
+<div class="legend">
+  {% set CVAR = {'critical':'crit','high':'high','medium':'med','low':'low'} %}
+  {% for s in ['critical','high','medium','low'] %}
+  <span><span class="dot" style="background:var(--{{ CVAR[s] }})"></span>
+  <b class="tnum">{{ r.counts[s] }}</b> {{ s }}</span>
+  {% endfor %}
+</div>
 {% endmacro %}
 
-{% macro findings_list(r) %}
-{% for f in r.findings %}
+{% macro priority(r) %}
+{% set top = r.findings | selectattr('severity','in',['critical','high']) | list %}
+{% if top %}
+<div class="panel reveal">
+  <div class="datalabel" style="margin-bottom:12px">{{ icon('zap','') }} Remediate first</div>
+  <ul class="priority">
+    {% for f in top[:3] %}
+    <li><div><div class="p-title">{{ f.title }}</div>
+      <div class="p-fix">{{ f.remediation or 'See the finding below.' }}</div></div></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro findings(r) %}
+{% set layers = r.findings | map(attribute='layer') | unique | list %}
+{% for layer in layers %}
+<div class="layergroup reveal" data-i="{{ loop.index0 }}">
+  <div class="datalabel">{{ icon(LAYER_ICON.get(layer,'shield'),'') }} {{ layer }}</div>
+  {% for f in r.findings if f.layer == layer %}
   <div class="finding">
-    <h4 class="{{ f.severity }}">{{ f.title }}</h4>
-    <div class="tag">{{ f.severity }} · {{ f.layer }} · found by {{ f.source_tool }} · proof: {{ f.proof }}</div>
-    <p style="margin:8px 0"><span class="muted">Where:</span> <code>{{ f.location }}</code></p>
-    <p style="margin:8px 0">{{ f.description }}</p>
+    <div class="f-head">
+      <div>
+        <h4>{{ f.title }}</h4>
+        <div class="f-meta">
+          <span class="sev {{ f.severity }}">{{ icon(SEV_ICON.get(f.severity,'shield-alert'),'') }}{{ f.severity }}</span>
+          <span>{{ f.source_tool }}</span><span class="dim">·</span>
+          <span class="proof {{ f.proof }}">{{ 'PROVEN' if f.proof=='proven' else ('FIXED' if f.proof=='fixed' else 'unproven') }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="where">{{ f.location }}</div>
+    <p>{{ f.description }}</p>
     {% if f.evidence %}<pre>{{ f.evidence }}</pre>{% endif %}
-    {% if f.remediation %}<p><span class="muted">Fix:</span> {{ f.remediation }}</p>{% endif %}
-    {% if f.cwe or f.cve %}<div class="tag">{{ f.cwe or '' }} {{ f.cve or '' }}</div>{% endif %}
+    {% if f.remediation %}<div class="fix"><b>Fix</b> — {{ f.remediation }}</div>{% endif %}
+    {% if f.cwe or f.cve %}<div class="refs">{{ f.cwe or '' }} {{ f.cve or '' }}</div>{% endif %}
   </div>
+  {% endfor %}
+</div>
 {% endfor %}
 {% endmacro %}

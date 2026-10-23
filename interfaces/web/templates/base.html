@@ -1,41 +1,29 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}Vaultrix Labs{% endblock %}</title>
-<style>
-  :root{--bg:#0b0e14;--panel:#141922;--line:#232b38;--fg:#e6edf3;--muted:#8b97a7;
-        --crit:#ff5c5c;--high:#ff9f43;--med:#ffd166;--low:#4aa3ff;--ok:#39d98a;--accent:#7c5cff}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
-  header{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg)}
-  header .brand{font-weight:700;letter-spacing:.3px} header .brand span{color:var(--accent)}
-  main{max-width:960px;margin:0 auto;padding:28px 22px}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin:16px 0}
-  input[type=text],input[type=url]{width:100%;padding:11px 13px;border-radius:9px;border:1px solid var(--line);background:#0d1219;color:var(--fg);font-size:15px}
-  button,.btn{display:inline-block;background:var(--accent);color:#fff;border:0;border-radius:9px;padding:10px 16px;font-weight:600;cursor:pointer;font-size:14px}
-  button.ghost,.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--fg)}
-  .muted{color:var(--muted)} .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .grade{font-size:52px;font-weight:800;line-height:1} .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700}
-  .crit{color:var(--crit)} .high{color:var(--high)} .med{color:var(--med)} .low{color:var(--low)} .ok{color:var(--ok)}
-  .b-crit{background:rgba(255,92,92,.15);color:var(--crit)} .b-high{background:rgba(255,159,67,.15);color:var(--high)}
-  .b-med{background:rgba(255,209,102,.15);color:var(--med)} .b-low{background:rgba(74,163,255,.15);color:var(--low)}
-  .finding{border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0;background:#0d1219}
-  .finding h4{margin:0 0 6px} code,pre{background:#0d1219;border:1px solid var(--line);border-radius:7px}
-  pre{padding:12px;overflow:auto;font-size:13px} code{padding:1px 5px;font-size:13px}
-  table{width:100%;border-collapse:collapse} td,th{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
-  .tag{font-size:12px;color:var(--muted)}
-</style>
+<meta name="color-scheme" content="dark">
+<script>document.documentElement.className="js"</script>
+<title>{% block title %}Vaultrix Labs — threat console{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
 </head>
 <body>
-<header>
-  <div class="brand">Vaultrix <span>Labs</span></div>
-  <div class="row">
-    {% if user %}<span class="muted">@{{ user.login }}</span>
-      <form method="post" action="/logout" style="margin:0"><button class="ghost">Sign out</button></form>
+{% from "_icons.html" import icon with context %}
+<div class="topbar">
+  <a class="brand" href="/" style="color:inherit">
+    {{ icon('shield-check','') }}<span>VAULTRIX<span class="mark">//</span>LABS</span>
+    <span class="tag-ver">CSO&nbsp;v0.5</span>
+  </a>
+  <div class="who">
+    {% if user %}
+      <span class="handle">{{ icon('github') }}</span><span class="handle">@{{ user.login }}</span>
+      <form method="post" action="/logout" style="margin:0">
+        <button class="btn ghost sm">Sign out</button></form>
     {% endif %}
   </div>
-</header>
+</div>
 <main>{% block body %}{% endblock %}</main>
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body></html>

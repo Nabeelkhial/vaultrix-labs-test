@@ -1,29 +1,35 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon with context %}
 {% block body %}
-<div class="panel">
-  <h2 style="margin-top:0">Scan a public URL <span class="tag">passive · read-only · any site</span></h2>
-  <form method="post" action="/scan-url" class="row">
-    <input type="url" name="url" placeholder="https://yourapp.com" required style="flex:1">
-    <button>Scan</button>
+<div class="panel reveal">
+  <div class="datalabel" style="margin-bottom:6px">{{ icon('globe') }} Passive scan · read-only · any target</div>
+  <h2>Grade a live URL</h2>
+  <form method="post" action="/scan-url" class="field" style="margin-top:16px">
+    <input type="url" name="url" placeholder="https://your-app.com" required
+      autocomplete="off" spellcheck="false">
+    <button class="btn">{{ icon('scan') }} Scan</button>
   </form>
 </div>
-<div class="panel">
-  <h2 style="margin-top:0">Scan your code</h2>
-  <p class="muted">Connect a repository you own on GitHub. We verify write access, scan the code and
-  dependencies, and {% if docker_ready %}can build a sandbox to prove and fix findings.{% else %}
-  (this host has no Docker worker, so the sandbox attack/fix is unavailable here).{% endif %}</p>
-  <a class="btn" href="/repos">Choose a repository →</a>
+
+<div class="panel reveal" data-i="1">
+  <div class="datalabel" style="margin-bottom:6px">{{ icon('github') }} Connect a repository</div>
+  <h2>Assess your code</h2>
+  <p class="muted" style="margin-top:8px;max-width:64ch">We verify write access as proof of ownership, then
+  scan code and dependencies{% if docker_ready %}, and can stand up a disposable sandbox to prove and fix
+  exploits.{% else %}. <span class="c-med">Sandbox attack is unavailable here — no Docker worker detected.</span>{% endif %}</p>
+  <a class="btn ghost" href="/repos" style="margin-top:16px">{{ icon('arrow-right') }} Choose a repository</a>
 </div>
+
 {% if jobs %}
-<div class="panel">
-  <h3 style="margin-top:0">Recent scans</h3>
-  <table>
-    {% for j in jobs %}
-    <tr><td><a href="/job/{{ j.id }}">{{ j.target }}</a></td>
-        <td class="tag">{{ j.kind }}</td>
-        <td><span class="pill b-{{ 'crit' if j.status=='error' else 'low' }}">{{ j.status }}</span></td></tr>
-    {% endfor %}
-  </table>
+<div class="panel reveal" data-i="2">
+  <div class="datalabel" style="margin-bottom:14px">{{ icon('clock') }} Recent assessments</div>
+  {% for j in jobs %}
+  <div class="repo-row">
+    <div><a class="r-name" href="/job/{{ j.id }}">{{ icon(j.kind == 'attack' and 'target' or 'file') }}{{ j.target }}</a>
+      <div class="r-sub">{{ j.kind }}</div></div>
+    <span class="status {{ j.status }}"><span class="led"></span>{{ j.status }}</span>
+  </div>
+  {% endfor %}
 </div>
 {% endif %}
 {% endblock %}

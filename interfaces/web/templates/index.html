@@ -1,17 +1,36 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon with context %}
 {% block body %}
-<div class="panel">
-  <h1 style="margin-top:0">Is your app actually secure?</h1>
-  <p class="muted">An open-source AI Chief Security Officer for AI-built apps. Paste a URL for a free
-  grade. Sign in with GitHub to scan your code, build a sandbox, and prove — then fix — what a hacker could do.</p>
-  {% if oauth_ready %}
-    <a class="btn" href="/login">Sign in with GitHub</a>
-  {% else %}
-    <form method="post" action="/dev-login" style="margin:0">
-      <button>Continue with local gh (dev)</button>
-      <p class="tag">OAuth isn't configured, so this uses the machine's GitHub CLI login.
-      Set VAULTRIX_GH_CLIENT_ID / _SECRET for real multi-user OAuth.</p>
-    </form>
-  {% endif %}
+<div class="panel panel-pad-lg reveal" style="overflow:hidden">
+  <div class="datalabel" style="margin-bottom:16px">{{ icon('radar') }} Autonomous security assessment</div>
+  <h1>Find out what a<br>hacker could do first.</h1>
+  <p class="lead" style="margin-top:16px">Vaultrix is an open-source AI Chief Security Officer for AI-built apps. Paste
+  a URL for an instant posture grade. Connect a repository to scan code and dependencies, build a
+  disposable sandbox, and <strong>prove</strong>—then fix—real exploits before anyone else finds them.</p>
+  <div style="margin-top:26px">
+    {% if oauth_ready %}
+      <a class="btn" href="/login">{{ icon('github') }} Authenticate with GitHub</a>
+    {% else %}
+      <form method="post" action="/dev-login" style="margin:0">
+        <button class="btn">{{ icon('github') }} Continue with local gh</button>
+      </form>
+      <p class="refs" style="margin-top:12px;max-width:60ch">Dev mode — OAuth is not configured, so this uses
+      the machine's GitHub CLI session. Set <code>VAULTRIX_GH_CLIENT_ID</code> / <code>_SECRET</code> for
+      real multi-user login.</p>
+    {% endif %}
+  </div>
+  <div class="hairline"></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+    {% for t in [
+      ('globe','Passive recon','Headers, TLS, exposed files and bundle secrets on any live URL — read-only.'),
+      ('package','Code & supply chain','Secrets, dependency CVEs, missing row-level security, unauth routes.'),
+      ('target','Proven, then fixed','A sandbox attack proves the exploit, patches it, and re-verifies it closed.')] %}
+    <div>
+      <div class="c-brand feat-ico" style="margin-bottom:9px">{{ icon(t[0]) }}</div>
+      <div style="font-family:var(--font-display);font-weight:600;font-size:15px">{{ t[1] }}</div>
+      <p class="muted" style="font-size:13.5px;margin-top:5px">{{ t[2] }}</p>
+    </div>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}
