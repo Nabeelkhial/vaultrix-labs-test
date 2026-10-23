@@ -97,6 +97,9 @@ if __name__ == "__main__":  # self-check
     assert scan_text(anon, "x") == [], "anon key must not be flagged"
     assert any("service_role" in f.title for f in scan_text(svc, "x"))
     assert scan_text("const k='AKIA" + "A" * 16 + "'", "x")[0].severity is Severity.CRITICAL
+    # Stripe live key, built at runtime so no full-format literal is committed to the repo.
+    stripe = scan_text("const s='" + "sk_live_" + "z" * 24 + "'", "x")
+    assert stripe and stripe[0].title.endswith("Stripe live secret") and stripe[0].severity is Severity.CRITICAL
     assert "AKIAAA…AAAA" in scan_text("AKIA" + "A" * 16, "x")[0].evidence
     assert scan_text("const ok = 'not a secret at all'", "x") == []
     print("secrets self-check ok")

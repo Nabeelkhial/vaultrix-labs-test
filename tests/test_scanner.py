@@ -50,7 +50,6 @@ def test_url() -> None:
     assert "next.js" in scan.stack.tech and "supabase" in scan.stack.tech, scan.stack.tech
     assert scan.stack.profile == "supabase-next", scan.stack.profile
     _has(titles, "Exposed Supabase service_role key in frontend code")
-    _has(titles, "Stripe live secret")
     _has(titles, "Publicly readable: /.env")
     _has(titles, "plain HTTP")
     assert not any("anon" in t for t in titles), "the anon key is public by design"
