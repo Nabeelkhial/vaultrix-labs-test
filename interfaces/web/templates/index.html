@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="panel">
+  <h1 style="margin-top:0">Is your app actually secure?</h1>
+  <p class="muted">An open-source AI Chief Security Officer for AI-built apps. Paste a URL for a free
+  grade. Sign in with GitHub to scan your code, build a sandbox, and prove — then fix — what a hacker could do.</p>
+  {% if oauth_ready %}
+    <a class="btn" href="/login">Sign in with GitHub</a>
+  {% else %}
+    <form method="post" action="/dev-login" style="margin:0">
+      <button>Continue with local gh (dev)</button>
+      <p class="tag">OAuth isn't configured, so this uses the machine's GitHub CLI login.
+      Set VAULTRIX_GH_CLIENT_ID / _SECRET for real multi-user OAuth.</p>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

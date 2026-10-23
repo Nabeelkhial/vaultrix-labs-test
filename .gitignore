@@ -4,3 +4,8 @@ __pycache__/
 .venv/
 # The examples/ fixtures intentionally contain FAKE secrets and a committed .env;
 # they are the test corpus, so they are tracked on purpose. Nothing real here.
+
+# web front door runtime
+.venv-web/
+.venv-web.env
+interfaces/web/vaultrix_web.db*

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import "_findings.html" as fx %}
+{% block body %}
+<p><a href="/dashboard">← back</a></p>
+{% if error %}<div class="panel"><h3 class="crit">Scan failed</h3><pre>{{ error }}</pre></div>
+{% else %}
+<div class="panel">
+  <h2 style="margin-top:0">{{ result.target }}</h2>
+  {{ fx.grade_block(result) }}
+</div>
+<div class="panel">{{ fx.findings_list(result) }}</div>
+<p class="tag">Passive, read-only scan. Connect a repo for code, dependencies and a sandbox attack.</p>
+{% endif %}
+{% endblock %}

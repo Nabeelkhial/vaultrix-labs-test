@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vaultrix-web",
+      "runtimeExecutable": "/Users/nabeelkhayal/Documents/Catchme/vaultrix-labs-test/.venv-web/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "interfaces.web.app"
+      ],
+      "port": 5111
+    }
+  ]
+}

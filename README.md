@@ -175,6 +175,10 @@ No logic lives in an interface — each calls `core/orchestrator.py`.
   ```
 - **Claude Code skill** (`interfaces/skill/SKILL.md`) — `name` + `description`
   frontmatter so Claude Code auto-routes "is my app secure?" to the engine.
+- **Web front door** (`interfaces/web/`) — a Flask app: Login with GitHub, connect
+  a repo you own, run the inspection, read the graded report. Passive scans run
+  inline; repo scans and sandbox attacks run as background jobs. See
+  `interfaces/web/README.md` for OAuth setup and deploy.
 
 ## Live CVE watcher (`watch`)
 

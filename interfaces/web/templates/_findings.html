@@ -1,0 +1,29 @@
+{% macro grade_block(r) %}
+{% set g = r.grade %}
+{% set cls = 'ok' if g in ['A','B'] else ('med' if g=='C' else 'crit') %}
+<div class="row" style="gap:20px;align-items:flex-end">
+  <div class="grade {{ cls }}">{{ g }}</div>
+  <div><div style="font-size:20px;font-weight:700">{{ r.score }}/100</div>
+  <div class="muted">{{ r.headline }}</div></div>
+</div>
+<p style="margin-top:14px">
+  <span class="pill b-crit">{{ r.counts.critical }} critical</span>
+  <span class="pill b-high">{{ r.counts.high }} high</span>
+  <span class="pill b-med">{{ r.counts.medium }} medium</span>
+  <span class="pill b-low">{{ r.counts.low }} low</span>
+</p>
+{% endmacro %}
+
+{% macro findings_list(r) %}
+{% for f in r.findings %}
+  <div class="finding">
+    <h4 class="{{ f.severity }}">{{ f.title }}</h4>
+    <div class="tag">{{ f.severity }} · {{ f.layer }} · found by {{ f.source_tool }} · proof: {{ f.proof }}</div>
+    <p style="margin:8px 0"><span class="muted">Where:</span> <code>{{ f.location }}</code></p>
+    <p style="margin:8px 0">{{ f.description }}</p>
+    {% if f.evidence %}<pre>{{ f.evidence }}</pre>{% endif %}
+    {% if f.remediation %}<p><span class="muted">Fix:</span> {{ f.remediation }}</p>{% endif %}
+    {% if f.cwe or f.cve %}<div class="tag">{{ f.cwe or '' }} {{ f.cve or '' }}</div>{% endif %}
+  </div>
+{% endfor %}
+{% endmacro %}

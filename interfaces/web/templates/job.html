@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "_findings.html" as fx %}
+{% block title %}Scan {{ job.target }}{% endblock %}
+{% block body %}
+{% if job.status in ['queued','running'] %}<meta http-equiv="refresh" content="3">{% endif %}
+<p><a href="/dashboard">← back</a></p>
+<div class="panel">
+  <h2 style="margin-top:0">{{ job.target }} <span class="tag">{{ job.kind }}</span></h2>
+  <p>Status: <span class="pill b-{{ 'crit' if job.status=='error' else ('ok' if job.status=='done' else 'low') }}">{{ job.status }}</span>
+    {% if job.status in ['queued','running'] %}<span class="muted">· this page refreshes automatically</span>{% endif %}</p>
+  {% if job.log %}<pre>{{ job.log }}</pre>{% endif %}
+</div>
+{% if job.status == 'done' and job.result %}
+<div class="panel">{{ fx.grade_block(job.result) }}</div>
+<div class="panel">{{ fx.findings_list(job.result) }}</div>
+{% elif job.status == 'error' %}
+<div class="panel"><h3 class="crit">Scan failed</h3><p class="muted">See the log above.</p></div>
+{% endif %}
+{% endblock %}

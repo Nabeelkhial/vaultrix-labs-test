@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block body %}
+<p><a href="/dashboard">← back</a></p>
+<div class="panel">
+  <h2 style="margin-top:0">Your repositories</h2>
+  <p class="muted">We verify write access as proof of ownership, then scan code + dependencies.</p>
+  <table>
+    {% for r in repos %}
+    <tr>
+      <td><strong>{{ r.full_name }}</strong>
+          {% if r.private %}<span class="pill b-low">private</span>{% endif %}
+          <div class="tag">{{ r.language or '' }} · updated {{ r.pushed_at }}</div></td>
+      <td style="text-align:right">
+        <form method="post" action="/scan-repo" style="display:inline;margin:0">
+          <input type="hidden" name="repo" value="{{ r.full_name }}"><button>Scan code</button></form>
+        {% if docker_ready %}
+        <form method="post" action="/attack" style="display:inline;margin:0">
+          <input type="hidden" name="repo" value="{{ r.full_name }}">
+          <input type="hidden" name="stack" value="supabase-next">
+          <button class="ghost">Attack sandbox</button></form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td class="muted">No repositories found for this account.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

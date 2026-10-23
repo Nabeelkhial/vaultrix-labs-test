@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="panel">
+  <h2 style="margin-top:0">Scan a public URL <span class="tag">passive · read-only · any site</span></h2>
+  <form method="post" action="/scan-url" class="row">
+    <input type="url" name="url" placeholder="https://yourapp.com" required style="flex:1">
+    <button>Scan</button>
+  </form>
+</div>
+<div class="panel">
+  <h2 style="margin-top:0">Scan your code</h2>
+  <p class="muted">Connect a repository you own on GitHub. We verify write access, scan the code and
+  dependencies, and {% if docker_ready %}can build a sandbox to prove and fix findings.{% else %}
+  (this host has no Docker worker, so the sandbox attack/fix is unavailable here).{% endif %}</p>
+  <a class="btn" href="/repos">Choose a repository →</a>
+</div>
+{% if jobs %}
+<div class="panel">
+  <h3 style="margin-top:0">Recent scans</h3>
+  <table>
+    {% for j in jobs %}
+    <tr><td><a href="/job/{{ j.id }}">{{ j.target }}</a></td>
+        <td class="tag">{{ j.kind }}</td>
+        <td><span class="pill b-{{ 'crit' if j.status=='error' else 'low' }}">{{ j.status }}</span></td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}
