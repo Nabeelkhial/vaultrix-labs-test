@@ -3,10 +3,10 @@
 Open-source AI Chief Security Officer for AI-built SaaS apps.
 Paste a URL for a grade. Connect a repo for the full report.
 
-**v0.3 — passive URL scan, code/dependency scan, and a sandbox attack that
-proves findings.** The built-in checks are Python 3.11+ stdlib; the borrowed
-scanners and the sandbox run from pinned Docker images when their binaries are
-absent.
+**v0.4 — passive scan, repo scan, a sandbox attack that *proves* findings, and
+a fix loop that patches, rebuilds, re-proves, and opens a PR.** The built-in
+checks are Python 3.11+ stdlib; the borrowed scanners and the sandbox run from
+pinned Docker images when their binaries are absent.
 
 ```bash
 python3 -m interfaces.cli.main scan https://yourapp.com     # passive, any site
@@ -156,10 +156,26 @@ readable `.env`/`.git/`, RLS missing on exactly the three unprotected tables, an
 the unauthed route — grade `F` throughout, `anon` key never flagged. Everything
 Docker-dependent is skipped offline, and the suite still passes.
 
+## The fix loop (`fix`)
+
+For every **proven** finding, Vaultrix:
+
+1. creates a branch `vaultrix-fix/<id>`,
+2. applies a minimal patch (a deterministic fixer for known classes; a model seam
+   for the rest — we never apply a patch we cannot re-verify),
+3. rebuilds the sandbox from the patched branch,
+4. **replays the exact proof** that confirmed the bug,
+5. marks the finding `FIXED` only if the proof no longer succeeds.
+
+Opening a PR writes to your GitHub repo, so `fix` only prepares the branch and
+shows the diff by default. `--open-pr` pushes and opens it via `gh` — and never
+auto-merges; you click merge. `fix demo` runs the whole loop on the bundled target
+with nothing but Docker, and closes both seeded IDORs.
+
 ## Not built yet
 
-v0.4 fix-and-reverify (patch on a branch, rebuild the sandbox, re-run the proof,
-confirm closed, open a PR) · v0.5 MCP server, Claude Code skill, live CVE watcher,
-Laravel stack. Roadmap in DEVELOPMENT_PLAN.md.
+v0.5 — MCP server, Claude Code skill, live CVE watcher (OSV/NVD), a second stack
+(Laravel), and the Agent-SDK patch generator behind the `fix/patch.py` seam.
+Roadmap in DEVELOPMENT_PLAN.md.
 
 MIT.
