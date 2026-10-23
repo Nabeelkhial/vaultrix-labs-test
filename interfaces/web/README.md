@@ -17,17 +17,26 @@ is automatically disabled once OAuth is set.
 
 ## Real GitHub OAuth (for a deployed, multi-user app)
 
+> **New here? Follow the illustrated walkthrough:** **[OAUTH_SETUP.md](OAUTH_SETUP.md)** — before/after screenshots, the sign-in flow diagram, and the exact registration form, step by step.
+
 1. Register an OAuth App at <https://github.com/settings/developers> →
    **New OAuth App**.
    - Homepage URL: your deployment's base URL.
    - **Authorization callback URL**: `<base-url>/auth/callback`.
-2. Set these environment variables (never commit them):
+2. Put the credentials in `interfaces/web/.env` (copy `.env.example`; this file is
+   gitignored — never commit it). The app loads it automatically on start:
 
    ```
    VAULTRIX_GH_CLIENT_ID=<client id>
    VAULTRIX_GH_CLIENT_SECRET=<client secret>
    VAULTRIX_SECRET_KEY=<random 32+ byte hex, for signing session cookies>
    ```
+
+   Generate the secret key with `python3 -c "import secrets; print(secrets.token_hex(32))"`.
+   For local testing, register the app with homepage `http://localhost:5111` and
+   callback `http://localhost:5111/auth/callback`. Once `.env` has the two GitHub
+   values, the dev `gh` login disappears and the real "Authenticate with GitHub"
+   button takes over.
 
 The requested scope is `repo read:user` — `repo` is needed to list and clone the
 private repositories a user asks us to scan. The user's token is stored

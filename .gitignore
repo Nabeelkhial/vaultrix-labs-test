@@ -9,3 +9,4 @@ __pycache__/
 .venv-web/
 .venv-web.env
 interfaces/web/vaultrix_web.db*
+interfaces/web/.env

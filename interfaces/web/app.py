@@ -27,6 +27,23 @@ from flask import (Flask, abort, redirect, render_template, request, session, ur
 from core.orchestrator import attack_sandbox, scan_repo, scan_url, fix_findings
 from interfaces.web import jobs
 
+def _load_env() -> None:
+    """Load interfaces/web/.env into the environment, if present. Stdlib only.
+    Real values live in that file (gitignored); never commit secrets."""
+    from pathlib import Path as _P
+    env = _P(__file__).resolve().parent / ".env"
+    if not env.exists():
+        return
+    for line in env.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+_load_env()
+
 GH_CLIENT_ID = os.environ.get("VAULTRIX_GH_CLIENT_ID", "")
 GH_CLIENT_SECRET = os.environ.get("VAULTRIX_GH_CLIENT_SECRET", "")
 OAUTH_READY = bool(GH_CLIENT_ID and GH_CLIENT_SECRET)

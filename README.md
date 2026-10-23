@@ -178,7 +178,8 @@ No logic lives in an interface — each calls `core/orchestrator.py`.
 - **Web front door** (`interfaces/web/`) — a Flask app: Login with GitHub, connect
   a repo you own, run the inspection, read the graded report. Passive scans run
   inline; repo scans and sandbox attacks run as background jobs. See
-  `interfaces/web/README.md` for OAuth setup and deploy.
+  `interfaces/web/README.md`, and the illustrated
+  `interfaces/web/OAUTH_SETUP.md` for turning on real GitHub login.
 
 ## Live CVE watcher (`watch`)
 
