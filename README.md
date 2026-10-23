@@ -18,6 +18,26 @@ python3 -m interfaces.cli.main attack --repo owner/name     # build a sandbox fr
 python3 -m interfaces.cli.main doctor                       # what's available and how
 ```
 
+## Web front door
+
+A deployable web app — **Login with GitHub, connect a repo, run the inspection,
+read the graded report.** Passive scans run inline; repo scans and sandbox attacks
+run as background jobs.
+
+![Vaultrix Labs web front door](interfaces/web/docs/landing-after.png)
+
+Run it locally:
+
+```bash
+python3 -m venv .venv-web && .venv-web/bin/pip install -r interfaces/web/requirements.txt
+PORT=5111 .venv-web/bin/python -m interfaces.web.app   # http://localhost:5111
+```
+
+Without OAuth configured it offers a local `gh` dev login. To turn on real
+multi-user **Login with GitHub**, follow the illustrated guide:
+**[interfaces/web/OAUTH_SETUP.md](interfaces/web/OAUTH_SETUP.md)** — before/after
+screenshots, the sign-in flow diagram, and the exact registration form.
+
 ## The two gates
 
 Passive URL checks are **read-only** — `GET`/`HEAD` only, no payloads, no login
