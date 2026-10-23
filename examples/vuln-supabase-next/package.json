@@ -1,0 +1,10 @@
+{
+  "name": "vuln-supabase-next",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "lodash": "4.17.4",
+    "minimist": "1.2.0",
+    "next": "13.4.0"
+  }
+}

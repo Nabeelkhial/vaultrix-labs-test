@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+# The examples/ fixtures intentionally contain FAKE secrets and a committed .env;
+# they are the test corpus, so they are tracked on purpose. Nothing real here.
