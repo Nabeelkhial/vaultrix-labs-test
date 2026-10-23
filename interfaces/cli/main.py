@@ -74,6 +74,14 @@ def main(argv: list[str] | None = None) -> int:
     fx.add_argument("--open-pr", action="store_true",
                     help="push the fix branch and open a PR (writes to your GitHub repo; never auto-merges)")
     fx.add_argument("-q", "--quiet", action="store_true")
+
+    w = sub.add_parser("watch", help="flag OSV.dev CVEs for a repo's dependencies (schedulable)")
+    w.add_argument("--repo", required=True, help="local path to a checkout")
+    w.add_argument("--since", help="only CVEs modified on/after this date (YYYY-MM-DD) — new since last run")
+    w.add_argument("--json", action="store_true")
+    w.add_argument("-o", "--out")
+    w.add_argument("-q", "--quiet", action="store_true")
+    w.add_argument("--fail-on", choices=list("ABCDF"))
     a = ap.parse_args(argv)
 
     if a.cmd == "doctor":
@@ -81,6 +89,16 @@ def main(argv: list[str] | None = None) -> int:
 
     quiet = a.quiet or getattr(a, "json", False)
     log = (lambda _m: None) if quiet else (lambda m: print(f"  · {m}", file=sys.stderr))
+
+    if a.cmd == "watch":
+        from pathlib import Path as _P
+        from core.findings import dedupe
+        from core.orchestrator import Scan
+        from watch.cve_watch import watch as _watch
+        findings = dedupe(_watch(_P(a.repo).expanduser().resolve(), since=a.since, log=log))
+        scan = Scan("watch", str(a.repo), findings)
+        _emit(scan, a)
+        return _grade_exit(scan, a.fail_on)
 
     if a.cmd == "fix":
         return _run_fix(a, log)

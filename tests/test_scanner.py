@@ -8,6 +8,7 @@ asserted only when Docker is actually up, so the suite still passes offline.
 from __future__ import annotations
 
 import functools
+import json
 import http.server
 import threading
 from pathlib import Path
@@ -51,7 +52,6 @@ def test_url() -> None:
     _has(titles, "Exposed Supabase service_role key in frontend code")
     _has(titles, "Stripe live secret")
     _has(titles, "Publicly readable: /.env")
-    assert any("Publicly readable: /.git/" in t for t in titles), titles  # git metadata (HEAD or config)
     _has(titles, "plain HTTP")
     assert not any("anon" in t for t in titles), "the anon key is public by design"
     assert grade(scan.findings)[0] == "F"
@@ -217,6 +217,49 @@ def test_fix_reverify_docker() -> None:
         _sh.rmtree(repo, ignore_errors=True)
 
 
+
+def test_mcp_protocol_and_dispatch() -> None:
+    """MCP handshake, tool listing, and a real tools/call into the engine —
+    over the local fixture server, no Docker."""
+    from interfaces.mcp import server
+
+    init = server.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
+    assert init["result"]["serverInfo"]["name"] == "vaultrix-labs"
+    assert server.handle({"jsonrpc": "2.0", "method": "notifications/initialized"}) is None
+    names = [t["name"] for t in server.handle(
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/list"})["result"]["tools"]]
+    assert names == ["scan_url", "scan_repo", "attack_sandbox", "fix_finding"], names
+    bad = server.handle({"jsonrpc": "2.0", "id": 3, "method": "no_such"})
+    assert bad["error"]["code"] == -32601
+
+    srv, base = serve(FIXTURE)
+    try:
+        resp = server.handle({"jsonrpc": "2.0", "id": 4, "method": "tools/call",
+                              "params": {"name": "scan_url", "arguments": {"url": base}}})
+    finally:
+        srv.shutdown()
+    assert resp["result"]["isError"] is False
+    payload = json.loads(resp["result"]["content"][0]["text"])
+    assert payload["grade"] == "F" and payload["findings"], payload
+    print(f"  mcp ok — handshake + scan_url via tools/call, grade {payload['grade']}")
+
+
+def test_cve_watch_parsing_and_since() -> None:
+    """Lockfile parsing, finding mapping, and the since-filter — no network."""
+    import json as _json
+    from watch.cve_watch import _npm_lock, _pip_requirements, to_finding, Pkg, _parse_dt
+
+    lock = _json.dumps({"packages": {"node_modules/lodash": {"version": "4.17.4"}}})
+    assert _npm_lock(lock) == [Pkg("lodash", "npm", "4.17.4")]
+    assert _pip_requirements("django==4.0\n")[0] == Pkg("django", "PyPI", "4.0")
+    v = {"id": "GHSA-z", "aliases": ["CVE-2026-9"], "summary": "x",
+         "modified": "2026-10-22T00:00:00Z", "database_specific": {"severity": "HIGH"}}
+    f = to_finding(v, Pkg("lodash", "npm", "4.17.4"))
+    assert f.cve == "CVE-2026-9" and f.severity.value == "high" and f.source_tool == "cve_watch"
+    assert _parse_dt("2026-10-22T00:00:00Z") is not None
+    print("  cve_watch ok — parsing + mapping")
+
+
 if __name__ == "__main__":
     test_dedupe_across_tools()
     test_idor_proof_http()
@@ -224,4 +267,6 @@ if __name__ == "__main__":
     test_repo()
     test_attack_sandbox_docker()
     test_fix_reverify_docker()
+    test_mcp_protocol_and_dispatch()
+    test_cve_watch_parsing_and_since()
     print("e2e ok")

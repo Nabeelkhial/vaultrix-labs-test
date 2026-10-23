@@ -117,6 +117,14 @@ def _limits(scan) -> list[str]:
         if not scan.deep:
             out += ["Run with `--deep` on a site you own to add Nuclei's known-CVE templates.", ""]
         return out
+    if scan.kind == "watch":
+        return [
+            "## About this report", "",
+            "This is a **dependency CVE watch** against OSV.dev — the known vulnerabilities in the "
+            "packages your project depends on. Run it on a schedule with `--since` to catch new "
+            "advisories the day they publish.", "",
+            "It does not read your own code or run your app; pair it with `scan --repo` and `attack`.", "",
+        ]
     if scan.kind == "attack":
         proven = sum(1 for f in scan.findings if f.proof.value == "proven")
         return [

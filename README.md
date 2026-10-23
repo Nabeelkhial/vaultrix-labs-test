@@ -3,10 +3,11 @@
 Open-source AI Chief Security Officer for AI-built SaaS apps.
 Paste a URL for a grade. Connect a repo for the full report.
 
-**v0.4 — passive scan, repo scan, a sandbox attack that *proves* findings, and
-a fix loop that patches, rebuilds, re-proves, and opens a PR.** The built-in
-checks are Python 3.11+ stdlib; the borrowed scanners and the sandbox run from
-pinned Docker images when their binaries are absent.
+**v0.5 — the full engine behind three interfaces (CLI, MCP, Claude Code skill),
+plus a live CVE watcher.** Passive scan, repo scan, a sandbox attack that
+*proves* findings, and a fix loop that patches, rebuilds, re-proves and opens a
+PR. The built-in checks are Python 3.11+ stdlib; the borrowed scanners and the
+sandbox run from pinned Docker images when their binaries are absent.
 
 ```bash
 python3 -m interfaces.cli.main scan https://yourapp.com     # passive, any site
@@ -135,8 +136,10 @@ scanners/     passive.py · secrets.py · repo.py (ours) · _tool.py (native-or-
               gitleaks.py · trivy.py · osv.py · opengrep.py · nuclei.py · zap.py (borrowed, subprocess)
 sandbox/      generator.py (repo -> compose + seed) · sandbox.py (up / wait-healthy / teardown -v)
 prove/        idor_prober.py (the proof) · poc_runner.py (login -> probe)
+fix/          patch.py (fixer registry + diff) · reverify.py (branch -> rebuild -> re-prove -> PR)
+watch/        cve_watch.py — OSV.dev dependency CVE watch with a since-filter
 report/       grade.py (A–F) · cso_report.py (markdown + JSON)
-interfaces/   cli/main.py
+interfaces/   cli/main.py · mcp/server.py (stdio JSON-RPC) · skill/SKILL.md
 examples/     vuln-supabase-next (repo fixture) · sandbox-idor-demo (runnable attack target)
 tests/        test_scanner.py — end-to-end: URL, repo, in-process IDOR proof, containerised attack
 ```
@@ -156,6 +159,36 @@ readable `.env`/`.git/`, RLS missing on exactly the three unprotected tables, an
 the unauthed route — grade `F` throughout, `anon` key never flagged. Everything
 Docker-dependent is skipped offline, and the suite still passes.
 
+## One engine, three interfaces (§13)
+
+No logic lives in an interface — each calls `core/orchestrator.py`.
+
+- **CLI** (`interfaces/cli/main.py`) — `scan`, `attack`, `fix`, `watch`, `doctor`.
+- **MCP server** (`interfaces/mcp/server.py`) — exposes `scan_url`, `scan_repo`,
+  `attack_sandbox`, `fix_finding` to Cursor / Codex / any agent, over stdio
+  JSON-RPC. Stdlib only, so it needs no extra install:
+  ```json
+  { "mcpServers": { "vaultrix": {
+      "command": "python3",
+      "args": ["-m", "interfaces.mcp.server"],
+      "cwd": "/path/to/vaultrix-labs-test" } } }
+  ```
+- **Claude Code skill** (`interfaces/skill/SKILL.md`) — `name` + `description`
+  frontmatter so Claude Code auto-routes "is my app secure?" to the engine.
+
+## Live CVE watcher (`watch`)
+
+Queries OSV.dev for the CVEs in your dependencies. Run it on a schedule with
+`--since` and it reports only advisories published since your last run, so a new
+PHP2Shell-class CVE surfaces the day it lands — not at the next manual scan:
+
+```bash
+python3 -m interfaces.cli.main watch --repo . --since "$(date -v-1d +%F)"
+```
+
+OSV.dev is free and needs no key. Dependency CVEs are covered now; runtime CVEs
+for the stack itself (PHP, nginx) live in NVD and are the next increment.
+
 ## The fix loop (`fix`)
 
 For every **proven** finding, Vaultrix:
@@ -174,8 +207,9 @@ with nothing but Docker, and closes both seeded IDORs.
 
 ## Not built yet
 
-v0.5 — MCP server, Claude Code skill, live CVE watcher (OSV/NVD), a second stack
-(Laravel), and the Agent-SDK patch generator behind the `fix/patch.py` seam.
-Roadmap in DEVELOPMENT_PLAN.md.
+A second stack (Laravel/PHP) for the sandbox; the NVD runtime-CVE feed in the
+watcher; and the Agent-SDK patch generator behind the `fix/patch.py` seam, for
+fixing bug classes beyond the ones with a deterministic fixer today. Roadmap in
+DEVELOPMENT_PLAN.md.
 
 MIT.
