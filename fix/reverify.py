@@ -53,12 +53,28 @@ def fix_and_verify(finding: Finding, repo: Path, seed: Seed, stack: str = "demo"
     log(f"patched on branch {branch}")
 
     try:
-        workdir = tempfile.mkdtemp(prefix="vaultrix-reverify-")
-        plan = generate(stack, str(repo), workdir)   # build from the patched checkout
-        with Sandbox(plan) as sb:
-            log(f"rebuilt sandbox at {sb.url}, replaying the proof")
-            still = poc_runner.run(sb.url, seed, log=lambda _m: None)
-        reverified = not any(f.id == finding.id for f in still)
+        if stack == "supabase-next":
+            from functools import partial
+            from sandbox.supabase import SupabaseSandbox
+            sb = SupabaseSandbox(repo)
+            try:
+                sb.up()
+                sb.db_reset()   # re-applies the PATCHED migration (RLS on) and re-seeds
+                log(f"rebuilt supabase stack at {sb.url}, replaying the proof")
+                still = poc_runner.run(sb.url, sb.seed,
+                                       login=partial(poc_runner.supabase_login, anon_key=sb.anon),
+                                       log=lambda _m: None)
+            finally:
+                sb.teardown()
+        else:
+            workdir = tempfile.mkdtemp(prefix="vaultrix-reverify-")
+            plan = generate(stack, str(repo), workdir)   # build from the patched checkout
+            with Sandbox(plan) as sb:
+                log(f"rebuilt sandbox at {sb.url}, replaying the proof")
+                still = poc_runner.run(sb.url, seed, log=lambda _m: None)
+        # Re-seeding can assign fresh record ids, so match on the class, not the id:
+        # the hole is closed iff the prover can no longer prove any IDOR.
+        reverified = len(still) == 0
     finally:
         _git(repo, "checkout", base)   # leave the repo back on its base branch
 

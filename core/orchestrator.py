@@ -144,6 +144,7 @@ def attack_sandbox(target: str, stack: str = "demo", log=lambda _m: None,
     import tempfile
     from pathlib import Path
 
+    from pathlib import Path
     from prove import poc_runner
     from sandbox.generator import generate
     from sandbox.sandbox import Sandbox
@@ -169,23 +170,36 @@ def attack_sandbox(target: str, stack: str = "demo", log=lambda _m: None,
         repo_path = str(p)
         log(f"using local checkout {p} (sandbox is built from a copy; production is never touched)")
 
-    workdir = tempfile.mkdtemp(prefix="vaultrix-sandbox-")
-    plan = generate(stack, repo_path, workdir)
-    log(f"generated sandbox for stack {stack!r} ({len(plan.seed.users)} seeded users)")
-
     findings: list[Finding] = []
+    seed_used = None
     try:
-        with Sandbox(plan) as sb:
-            log(f"sandbox up at {sb.url}")
-            login = poc_runner.json_login
-            findings += poc_runner.run(sb.url, plan.seed, login=login, log=log)
-            if zap.available():
-                log("running ZAP baseline against the sandbox")
-                findings += zap.run(sb.url)
-            else:
-                log("ZAP image not available, skipping active DAST (docker pull "
-                    "ghcr.io/zaproxy/zaproxy:2.17.0)")
-        log("sandbox torn down")
+        if stack == "supabase-next":
+            from functools import partial
+            from sandbox.supabase import SupabaseSandbox
+            with SupabaseSandbox(Path(repo_path)) as sb:
+                log(f"supabase stack up at {sb.url}; seeded {len(sb.seed.users)} users")
+                seed_used = sb.seed
+                login = partial(poc_runner.supabase_login, anon_key=sb.anon)
+                findings += poc_runner.run(sb.url, sb.seed, login=login, log=log)
+                if zap.available():
+                    log("running ZAP baseline against the sandbox")
+                    findings += zap.run(sb.url)
+            log("supabase sandbox torn down")
+        else:
+            workdir = tempfile.mkdtemp(prefix="vaultrix-sandbox-")
+            plan = generate(stack, repo_path, workdir)
+            seed_used = plan.seed
+            log(f"generated sandbox for stack {stack!r} ({len(plan.seed.users)} seeded users)")
+            with Sandbox(plan) as sb:
+                log(f"sandbox up at {sb.url}")
+                findings += poc_runner.run(sb.url, plan.seed, login=poc_runner.json_login, log=log)
+                if zap.available():
+                    log("running ZAP baseline against the sandbox")
+                    findings += zap.run(sb.url)
+                else:
+                    log("ZAP image not available, skipping active DAST (docker pull "
+                        "ghcr.io/zaproxy/zaproxy:2.17.0)")
+            log("sandbox torn down")
     finally:
         if cleanup_clone and not keep:
             shutil.rmtree(cleanup_clone, ignore_errors=True)
@@ -193,7 +207,7 @@ def attack_sandbox(target: str, stack: str = "demo", log=lambda _m: None,
     subject = ownership.subject if ownership else (target if stack != "demo" else "demo sandbox")
     return Scan("attack", subject, dedupe(findings), ownership=ownership,
                 tools={"idor_prober": "built-in", "zap": status_or(zap)},
-                _seed=plan.seed, _repo=repo_path)
+                _seed=seed_used, _repo=repo_path)
 
 
 def status_or(mod) -> str:

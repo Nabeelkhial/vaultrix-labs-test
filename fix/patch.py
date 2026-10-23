@@ -49,8 +49,14 @@ def propose_patch(finding: Finding, repo: Path) -> Patch | None:
 
 
 @register("authz", "idor_prober")
+def _fix_idor(finding: Finding, repo: Path) -> Patch | None:
+    """Close a proven IDOR. Two shapes are handled: the demo's app.py ownership
+    check, and a Supabase migration missing row-level security."""
+    return _fix_idor_demo(finding, repo) or _fix_idor_supabase(finding, repo)
+
+
 def _fix_idor_demo(finding: Finding, repo: Path) -> Patch | None:
-    """Make the ownership check unconditional.
+    """Make the demo's ownership check unconditional.
 
     The demo gates the ownership comparison behind a feature flag (the vulnerable
     default skips it). The fix is to enforce it always — the same shape as the
@@ -76,6 +82,36 @@ def _fix_idor_demo(finding: Finding, repo: Path) -> Patch | None:
             "record by changing the id. This patch compares the record's owner to "
             "the caller and returns 403 on a mismatch, for every request."),
     )
+
+
+def _fix_idor_supabase(finding: Finding, repo: Path) -> Patch | None:
+    """Enable row-level security + an owner policy on the first public table whose
+    migration created it without RLS. This is the canonical Supabase IDOR fix."""
+    mig_dir = repo / "supabase" / "migrations"
+    if not mig_dir.is_dir():
+        return None
+    for mig in sorted(mig_dir.glob("*.sql")):
+        text = mig.read_text()
+        m = re.search(r"create table (?:if not exists )?(?:public\.)?(\w+)", text, re.I)
+        if not m:
+            continue
+        table = m.group(1)
+        if re.search(rf"alter table[^;]*{table}[^;]*enable row level security", text, re.I):
+            continue  # already protected
+        policy = (
+            f"\n-- vaultrix-fix: enforce object ownership with row-level security\n"
+            f"alter table public.{table} enable row level security;\n"
+            f'create policy "owner can read own {table}" on public.{table}\n'
+            f"  for select using (auth.uid() = user_id);\n")
+        return Patch(
+            finding_id=finding.id,
+            files={f"supabase/migrations/{mig.name}": text + policy},
+            explanation=(
+                f"Enable row-level security on public.{table} and add an owner policy. The table was "
+                "exposed through PostgREST with RLS disabled, so any logged-in user — anyone with the "
+                "public anon key — could read every row. With RLS on and this policy, the database "
+                "returns only rows whose user_id matches the caller (auth.uid())."))
+    return None
 
 
 def apply_on_branch(repo: Path, patch: Patch, branch: str,
